@@ -20,11 +20,21 @@ insulin = np.random.randint(0, 20, n)
 bp = np.random.randint(90, 160, n)  
 
 # Symptoms (random 0 or 1)
-sweating = np.random.randint(0, 2, n)
-nausea = np.random.randint(0, 2, n)
-confusion = np.random.randint(0, 2, n)
-thirst = np.random.randint(0, 2, n)
+sweating = np.random.binomial(1, 0.5, n)  # 50% base chance
+nausea = np.random.binomial(1, 0.5, n)
+confusion = np.random.binomial(1, 0.5, n)
+thirst = np.random.binomial(1, 0.5, n)
 
+# Boost symptoms for high glucose (>250)
+for i in range(n):
+    if glucose[i] > 250:
+        # Increase chance for DKA symptoms
+        sweating[i] = np.random.binomial(1, 0.8)
+        nausea[i] = np.random.binomial(1, 0.8)
+        confusion[i] = np.random.binomial(1, 0.8)
+        thirst[i] = np.random.binomial(1, 0.8)
+
+        
 # Add meal status: pre or post
 meal_status = np.random.choice(["pre", "post"], n)
 

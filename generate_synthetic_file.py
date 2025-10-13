@@ -1,94 +1,87 @@
 import pandas as pd
 import numpy as np
 
+#  Step 1: Basic setup
+n_rows = 10000
 np.random.seed(42)
 
-def generate_cases(n=100, condition='Normal'):
-    """Generate realistic synthetic medical data"""
-    data = []
-    
-    for _ in range(n):
-        
-        if condition == 'Hypoglycemia':
-            glucose = np.random.uniform(20, 69)
-            carbs = np.random.randint(0, 40)  # LOW carbs - didn't eat enough
-            insulin_recent = np.random.choice(['Yes', 'No'], p=[0.75, 0.25])  # Usually took insulin
-            symptoms = np.random.choice([
-                'shakiness,sweating,confusion',
-                'severe_confusion,trembling,profuse_sweating',
-                'disorientation,weakness,cold_sweats',
-                'nervousness,sweating,weakness',
-                'trembling,anxiety,dizziness',
-                'confusion,anxiety,tremors'
-            ])
-            
-        elif condition == 'Hyperglycemia':
-            glucose = np.random.uniform(200, 400)
-            carbs = np.random.randint(80, 150)  # HIGH carbs - ate too much
-            insulin_recent = np.random.choice(['Yes', 'No'], p=[0.35, 0.65])  # Usually didn't take insulin
-            symptoms = np.random.choice([
-                'extreme_fatigue,polyuria,blurred_vision',
-                'excessive_thirst,weakness,frequent_urination',
-                'severe_thirst,frequent_urination,fatigue',
-                'thirst,polyuria,mild_fatigue',
-                'dry_mouth,frequent_urination,weakness',
-                'fatigue,blurred_vision,headache'
-            ])
-            
-        elif condition == 'DKA':
-            glucose = np.random.uniform(250, 600)
-            carbs = np.random.randint(30, 120)  # MODERATE carbs
-            insulin_recent = np.random.choice(['Yes', 'No'], p=[0.2, 0.8])  # Rarely took insulin
-            symptoms = np.random.choice([
-                'altered_mental_status,vomiting,rapid_breathing,fruity_breath',
-                'severe_abdominal_pain,vomiting,Kussmaul_breathing,altered_consciousness',
-                'vomiting,weakness,Kussmaul_breathing,polyuria',
-                'nausea,vomiting,rapid_breathing,abdominal_pain',
-                'abdominal_pain,vomiting,rapid_breathing,thirst',
-                'thirst,nausea,increased_breathing,fatigue',
-                'mild_nausea,increased_urination,weakness'
-            ])
-            
-        else:  # Normal
-            glucose = np.random.uniform(70, 140)
-            carbs = np.random.randint(40, 80)  # MODERATE carbs
-            insulin_recent = np.random.choice(['Yes', 'No'], p=[0.5, 0.5])  # 50/50
-            symptoms = np.random.choice(['None', 'None', 'None', 'Mild_fatigue'])
-        
-        data.append({
-            'glucose_mg_dl': round(glucose, 1),
-            'carbs_last_meal_grams': carbs,
-            'recent_insulin': insulin_recent,
-            'symptoms': symptoms,
-            'condition': condition
-        })
-        
-    return data
+#  Step 2: Generate numeric features (realistic ranges)
+historic_glucose = np.round(np.random.uniform(3.0, 20.0, n_rows), 1)
+scan_glucose = np.round(historic_glucose + np.random.normal(0, 1.5, n_rows), 1)
+rapid_insulin = np.random.randint(0, 21, n_rows)
+long_insulin = np.random.randint(8, 21, n_rows)
+carbs = np.random.randint(0, 151, n_rows)
 
-# Generate 500 samples per condition (2000 total for training)
-normal_data = generate_cases(500, 'Normal')
-hypo_data = generate_cases(500, 'Hypoglycemia')
-hyper_data = generate_cases(500, 'Hyperglycemia')
-dka_data = generate_cases(500, 'DKA')
+# Step 3: Define 4 glucose-based conditions
+# 0 = Hypoglycemia (<4)
+# 1 = Normal (4–6.9)
+# 2 = Hyperglycemia (7–13.9)
+# 3 = DKA (≥14)
+condition = []
+for g in scan_glucose:
+    if g < 4:
+        condition.append(0)
+    elif 4 <= g < 7:
+        condition.append(1)
+    elif 7 <= g < 14:
+        condition.append(2)
+    else:
+        condition.append(3)
+condition = np.array(condition)
 
-# Combine and shuffle
-all_data = normal_data + hypo_data + hyper_data + dka_data
-df = pd.DataFrame(all_data).sample(frac=1, random_state=42).reset_index(drop=True)
+#  Step 4: Symptom generation logic per condition
+def generate_symptoms(cond):
+    if cond == 0:  # Hypoglycemia
+        return [
+            0,  # Thirst
+            0,  # Nausea
+            np.random.choice([0, 1], p=[0.3, 0.7]),  # Weakness
+            0,  # Vomiting
+            np.random.choice([0, 1], p=[0.2, 0.8]),  # Fatigue
+            np.random.choice([0, 1], p=[0.3, 0.7])   # Shakiness
+        ]
+    elif cond == 1:  # Normal
+        return [0, 0, 0, 0, 0, 0]
+    elif cond == 2:  # Hyperglycemia
+        return [
+            np.random.choice([0, 1], p=[0.3, 0.7]),  # Thirst
+            np.random.choice([0, 1], p=[0.7, 0.3]),  # Nausea
+            np.random.choice([0, 1], p=[0.4, 0.6]),  # Weakness
+            0,  # Vomiting
+            np.random.choice([0, 1], p=[0.5, 0.5]),  # Fatigue
+            0   # Shakiness
+        ]
+    else:  # DKA
+        return [1, 1, 1, 1, 1, 0]
 
-# Save to CSV
-filename = 'synthetic_diabetes_data.csv'
-df.to_csv(filename, index=False)
+# Step 5: Generate symptom data
+symptoms = np.array([generate_symptoms(c) for c in condition])
+thirst, nausea, weakness, vomiting, fatigue, shakiness = symptoms.T
 
-# Print summary
-print(f"✓ Saved: {filename}")
-print(f"✓ Total: {len(df)} records\n")
-print("Condition counts:")
-print(df['condition'].value_counts())
-print("\nGlucose by condition:")
-print(df.groupby('condition')['glucose_mg_dl'].mean().round(1))
-print("\nCarbs by condition (KEY FEATURE):")
-print(df.groupby('condition')['carbs_last_meal_grams'].mean().round(1))
-print("\nInsulin 'Yes' percentage by condition (KEY FEATURE):")
-for cond in ['Hypoglycemia', 'Hyperglycemia', 'DKA', 'Normal']:
-    pct = (df[df['condition'] == cond]['recent_insulin'] == 'Yes').mean()
-    print(f"  {cond}: {pct:.0%}")
+# Step 6: Create DataFrame
+df = pd.DataFrame({
+    'Historic Glucose (mmol/L)': historic_glucose,
+    'Scan Glucose (mmol/L)': scan_glucose,
+    'Rapid-Acting Insulin (units)': rapid_insulin,
+    'Long-Acting Insulin (units)': long_insulin,
+    'Carbohydrates (grams)': carbs,
+    'Thirst': thirst,
+    'Nausea': nausea,
+    'Weakness': weakness,
+    'Vomiting': vomiting,
+    'Fatigue': fatigue,
+    'Shakiness': shakiness,
+    'Condition': condition
+})
+
+#  Step 7: Save to CSV
+df.to_csv('synthetic_diabetes_data.csv', index=False)
+
+#  Step 8: Print summary
+print("Synthetic dataset generated: synthetic_diabetes_data.csv")
+print(df['Condition'].value_counts().sort_index())
+print("\nCondition mapping:")
+print("0 = Hypoglycemia (<4 mmol/L)")
+print("1 = Normal (4–6.9 mmol/L)")
+print("2 = Hyperglycemia (7–13.9 mmol/L)")
+print("3 = DKA (≥14 mmol/L)")

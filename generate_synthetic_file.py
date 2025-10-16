@@ -112,12 +112,12 @@ df = pd.DataFrame({
 df.to_csv('synthetic_diabetes_data.csv', index=False)
 
 # Step 8: Print summary
-print("✅ Synthetic dataset generated: synthetic_diabetes_data.csv")
+print("Synthetic dataset generated: synthetic_diabetes_data.csv")
 print(f"Total rows: {len(df)}\n")
 
-print("📊 Condition Distribution:")
+print(" Condition Distribution:")
 print(df['Condition'].value_counts().sort_index())
-print("\n🏥 Condition Mapping:")
+print("\n Condition Mapping:")
 print("0 = Hypoglycemia (<3.9 mmol/L)")
 print("1 = Normal (3.9–6.9 mmol/L)")
 print("2 = Hyperglycemia (7–13.9 mmol/L)")

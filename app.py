@@ -17,7 +17,7 @@ try:
     condition_map = metadata['condition_map']
 except Exception as e:
     model, metadata, feature_names, condition_map = None, None, [], {}
-    print(f"⚠️ Error loading model or metadata: {e}")
+    print(f" Error loading model or metadata: {e}")
 
 # ======== Routes ========
 
@@ -26,7 +26,7 @@ def home():
     """Check API status"""
     return jsonify({
         'status': 'success',
-        'message': 'Diabetes Prediction API is running 🚀',
+        'message': 'Diabetes Prediction API is running ',
         'version': '1.0',
         'features_required': feature_names,
         'conditions': condition_map
@@ -45,9 +45,9 @@ def predict():
         
         data = request.get_json()
         
-        # 🔍 DEBUG: Print received data
+        #  DEBUG: Print received data
         print("\n" + "="*60)
-        print("📥 RECEIVED FROM FLUTTER:")
+        print(" RECEIVED FROM FLUTTER:")
         for key, value in data.items():
             print(f"   {key}: {value} (type: {type(value).__name__})")
         print("="*60)
@@ -69,10 +69,10 @@ def predict():
         # Convert input to DataFrame with correct column order
         input_df = pd.DataFrame([[data[f] for f in feature_names]], columns=feature_names)
         
-        # 🔍 DEBUG: Print DataFrame
-        print("\n📊 CONVERTED TO DATAFRAME:")
+        #  DEBUG: Print DataFrame
+        print("\n CONVERTED TO DATAFRAME:")
         print(input_df)
-        print(f"\n🔢 Data types:")
+        print(f"\n Data types:")
         print(input_df.dtypes)
         
         # Make prediction
@@ -80,9 +80,9 @@ def predict():
         probabilities = model.predict_proba(input_df)[0]
         condition = condition_map.get(prediction, "Unknown")
         
-        # 🔍 DEBUG: Print prediction
-        print(f"\n🎯 PREDICTION: {prediction} ({condition})")
-        print(f"📈 PROBABILITIES:")
+        #  DEBUG: Print prediction
+        print(f"\n PREDICTION: {prediction} ({condition})")
+        print(f"PROBABILITIES:")
         for i, prob in enumerate(probabilities):
             print(f"   {condition_map[i]}: {prob*100:.1f}%")
         print("="*60 + "\n")
@@ -96,7 +96,7 @@ def predict():
         })
     
     except Exception as e:
-        print(f"❌ ERROR: {str(e)}")
+        print(f" ERROR: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -107,7 +107,4 @@ def predict():
 
 # ======== Run the API ========
 if __name__ == '__main__':
-    # Use environment port for Render
-    import os
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True, host='0.0.0.0')

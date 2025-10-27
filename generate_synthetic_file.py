@@ -13,7 +13,7 @@ import numpy as np
 n_rows = 10000
 np.random.seed(42)
 
-print("🔬 Generating Type 1 Diabetes Synthetic Data V3...")
+print(" Generating Type 1 Diabetes Synthetic Data V3...")
 print("=" * 60)
 
 # ============================================
@@ -102,7 +102,7 @@ historic_glucose = np.round(historic_glucose, 1)
 # ============================================
 # STEP 6.5: CREATE DKA SCENARIOS
 # ============================================
-print("\n🔧 Creating realistic DKA scenarios...")
+print("\n Creating realistic DKA scenarios...")
 
 target_dka_count = int(n_rows * 0.09)
 print(f"Target DKA cases: {target_dka_count}")
@@ -153,12 +153,12 @@ for idx in dka_indices:
         9.0, 19.0
     )
 
-print(f"✅ Created {target_dka_count} DKA scenarios")
+print(f" Created {target_dka_count} DKA scenarios")
 
 # ============================================
 # STEP 6.6: BALANCE HYPOGLYCEMIA CASES
 # ============================================
-print("\n🔧 Ensuring sufficient hypoglycemia cases...")
+print("\n Ensuring sufficient hypoglycemia cases...")
 
 target_hypo_count = int(n_rows * 0.13)
 current_hypo = (scan_glucose < 3.9).sum()
@@ -191,14 +191,14 @@ if needed_hypo > 0:
                 4.0, 8.0
             )
         
-        print(f"✅ Created {needed_hypo} additional hypoglycemia cases")
+        print(f" Created {needed_hypo} additional hypoglycemia cases")
 else:
-    print(f"✅ Already have sufficient hypoglycemia cases")
+    print(f" Already have sufficient hypoglycemia cases")
 
 # ============================================
 # STEP 7: GENERATE SYMPTOMS FIRST (BEFORE CONDITIONS!)
 # ============================================
-print("\n🔧 Generating symptoms based on glucose patterns...")
+print("\n Generating symptoms based on glucose patterns...")
 
 def generate_symptoms_v3(glucose, rapid_insulin, carbs):
     """
@@ -259,7 +259,7 @@ thirst, nausea, weakness, vomiting, fatigue, shakiness = symptoms.T
 # ============================================
 # STEP 8: ASSIGN CONDITIONS WITH NOISE AND SYMPTOM INFLUENCE
 # ============================================
-print("\n🔧 Assigning conditions with realistic noise...")
+print("\n Assigning conditions with realistic noise...")
 
 condition = np.zeros(n_rows, dtype=int)
 
@@ -328,7 +328,7 @@ for i in range(n_rows):
             vomiting[i] == 1 and weakness[i] == 1):
             condition[i] = 3  # Clinical DKA despite glucose <14
 
-print("✅ Conditions assigned with noise and symptom influence")
+print("Conditions assigned with noise and symptom influence")
 
 # ============================================
 # STEP 9: Create DataFrame
@@ -354,12 +354,12 @@ df = pd.DataFrame({
 df.to_csv('synthetic_diabetes_data_v2.csv', index=False)
 
 print("\n" + "=" * 60)
-print("✅ REALISTIC synthetic dataset generated!")
+print(" REALISTIC synthetic dataset generated!")
 print("   File: synthetic_diabetes_data_v2.csv")
 print(f"   Total rows: {len(df)}")
 print("=" * 60)
 
-print("\n📊 FINAL CLASS DISTRIBUTION:")
+print("\n FINAL CLASS DISTRIBUTION:")
 condition_counts = df['Condition'].value_counts().sort_index()
 print("\nAbsolute counts:")
 print(condition_counts)
@@ -371,14 +371,14 @@ for cond, count in condition_counts.items():
     print(f"  Class {cond} ({condition_name}): {count:4d} samples ({pct:5.1f}%)")
 
 min_samples = condition_counts.min()
-print(f"\n✅ Minimum samples per class: {min_samples}")
+print(f"\n Minimum samples per class: {min_samples}")
 if min_samples >= 2:
     print("   ✓ Safe for stratified train-test split!")
 
 # ============================================
 # VERIFY: Check glucose ranges by condition
 # ============================================
-print("\n🔍 Glucose Range Verification (should have OVERLAP!):")
+print("\n Glucose Range Verification (should have OVERLAP!):")
 for cond in range(4):
     condition_name = ['Hypoglycemia', 'Normal', 'Hyperglycemia', 'DKA'][cond]
     glucose_values = df[df['Condition'] == cond]['Scan Glucose (mmol/L)']
@@ -389,7 +389,7 @@ for cond in range(4):
 # ============================================
 # VERIFY: Symptom influence on borderline cases
 # ============================================
-print("\n🔍 Borderline Case Analysis:")
+print("\n Borderline Case Analysis:")
 
 # Cases where symptoms influenced diagnosis
 borderline_dka = df[(df['Scan Glucose (mmol/L)'] >= 12.0) & 
@@ -404,9 +404,9 @@ borderline_hypo = df[(df['Scan Glucose (mmol/L)'] >= 3.9) &
                       (df['Condition'] == 0)]
 print(f"\nHypo cases with glucose 3.9-4.2 (symptom-based): {len(borderline_hypo)}")
 
-print("\n✅ Data generation complete!")
+print("\n Data generation complete!")
 print("=" * 60)
-print("\n📝 KEY IMPROVEMENTS:")
+print("\n KEY IMPROVEMENTS:")
 print("   1. ✓ Noisy thresholds (±0.4 mmol/L variation)")
 print("   2. ✓ Symptoms influence borderline diagnoses")
 print("   3. ✓ DKA possible with glucose 12-14 + severe symptoms")

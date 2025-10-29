@@ -1,3 +1,6 @@
+--prefer-binary
+
+
 cython
 wheel
 Flask==3.0.3

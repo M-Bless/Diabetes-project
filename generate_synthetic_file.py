@@ -186,42 +186,34 @@ symptoms = np.array([generate_symptoms_v4(g, ri, c) for g, ri, c in zip(scan_glu
 thirst, nausea, weakness, vomiting, fatigue, shakiness = symptoms.T
 
 # ============================================
-# STEP 8: Assign conditions (unchanged)
+# STEP 8: Assign conditions (UPDATED CLINICAL VERSION)
 # ============================================
-def assign_condition_v4(glucose, thirst, nausea, vomiting, weakness, fatigue, shakiness):
-    hypo_threshold = 4.0
-    normal_upper = 7.0
-    hyper_upper = 12.0
-    if glucose < hypo_threshold:
-        base_condition = 0
-    elif glucose < normal_upper:
+def assign_condition_v5(glucose, thirst, nausea, vomiting, weakness, fatigue, shakiness):
+    """
+    Clinical fix: 
+    - Glucose < 4.0 mmol/L → hypoglycemia (0), independent of symptoms
+    - 4.0–7.0 → normal (1)
+    - 7.0–12.0 → hyperglycemia (2)
+    - ≥12.0 → severe hyperglycemia (3)
+    """
+    if glucose < 4.0:
+        return 0
+    elif glucose < 7.0:
         base_condition = 1
-    elif glucose < hyper_upper:
+    elif glucose < 12.0:
         base_condition = 2
     else:
         base_condition = 3
-    if 3.7 <= glucose <= 4.2:
-        if weakness==1 and (shakiness==1 or fatigue==1):
-            return 0
-        else:
-            return 1
-    if 6.5 <= glucose <= 7.5:
-        if thirst==1 and fatigue==1:
-            return 2
-        else:
-            return 1
-    if 11.0 <= glucose <= 12.5:
-        severe_symptoms = thirst+nausea+weakness+vomiting+fatigue
-        if severe_symptoms>=4 or (severe_symptoms>=2 and glucose>=12.0):
+
+    # Optional severe hyper symptom adjustment
+    if 11.0 <= glucose < 13.0:
+        severe_symptoms = thirst + nausea + weakness + vomiting + fatigue
+        if severe_symptoms >= 4 or (severe_symptoms >= 2 and glucose >= 12.0):
             return 3
-        else:
-            return 2
-    if 10.5 <= glucose < 12.0:
-        if thirst==1 and nausea==1 and vomiting==1 and weakness==1:
-            return 3
+
     return base_condition
 
-condition = np.array([assign_condition_v4(g, t, n, v, w, f, s) 
+condition = np.array([assign_condition_v5(g, t, n, v, w, f, s) 
                       for g,t,n,v,w,f,s in zip(scan_glucose, thirst, nausea, vomiting, weakness, fatigue, shakiness)])
 
 # ============================================
